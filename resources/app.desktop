@@ -1,0 +1,14 @@
+[Desktop Entry]
+Name=Update Applet
+Comment=A simple applet which updates the whole system with a single click.
+Type=Application
+Icon=com.github.ErenYeager1709.update-applet
+Exec=update-applet %F
+Terminal=false
+StartupNotify=true
+Categories=COSMIC
+Keywords=COSMIC
+NoDisplay=true
+X-CosmicApplet=true
+X-CosmicHoverPopup=Auto
+MimeType=
