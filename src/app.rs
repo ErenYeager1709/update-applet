@@ -1,9 +1,13 @@
 // SPDX-License-Identifier: MPL-2.0
 
+use std::process::Command;
+use std::result;
+
 use crate::config::Config;
 use cosmic::cosmic_config::{self, CosmicConfigEntry};
 use cosmic::iced::Subscription;
 use cosmic::prelude::*;
+use notify_rust::{Notification, Timeout};
 
 /// The application model stores app-specific state used to describe its interface and
 /// drive its logic.
@@ -114,7 +118,60 @@ impl cosmic::Application for AppModel {
                 self.config = config;
             }
             Message::ButtonPressed => {
-                println!("Button Pressed!")
+                match Command::new("pkexec")
+                    .args(["dnf", "upgrade"])
+                    .arg("-y")
+                    .arg("--refresh")
+                    .output()
+                {
+                    Ok(result) => {
+                        let result_text = if result.status.success() {
+                            "dnf update succeded!"
+                        } else {
+                            "dnf update failed!"
+                        };
+
+                        Notification::new()
+                            .summary("dnf")
+                            .body(result_text)
+                            .timeout(Timeout::Milliseconds(5000))
+                            .show()
+                            .unwrap();
+                    }
+                    Err(err) => {
+                        Notification::new()
+                            .summary("dnf")
+                            .body(&err.to_string())
+                            .timeout(Timeout::Milliseconds(5000))
+                            .show()
+                            .unwrap();
+                    }
+                }
+
+                match Command::new("flatpak").arg("update").arg("-y").output() {
+                    Ok(result) => {
+                        let result_text = if result.status.success() {
+                            "flatpack update succeded!"
+                        } else {
+                            "flatpack update failed!"
+                        };
+
+                        Notification::new()
+                            .summary("Flatpack")
+                            .body(result_text)
+                            .timeout(Timeout::Milliseconds(5000))
+                            .show()
+                            .unwrap();
+                    }
+                    Err(err) => {
+                        Notification::new()
+                            .summary("Flatpack")
+                            .body(&err.to_string())
+                            .timeout(Timeout::Milliseconds(5000))
+                            .show()
+                            .unwrap();
+                    }
+                }
             }
         }
         Task::none()

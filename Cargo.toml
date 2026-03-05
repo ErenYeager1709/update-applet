@@ -9,6 +9,7 @@ repository = "https://github.com/ErenYeager1709/update-applet"
 [dependencies]
 futures-util = "0.3.31"
 i18n-embed-fl = "0.10"
+notify-rust = "4.12.0"
 rust-embed = "8.7.2"
 tokio = { version = "1.48.0", features = ["full"] }
 
