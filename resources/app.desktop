@@ -1,8 +1,8 @@
 [Desktop Entry]
-Name=Update Applet
+Name=Update
 Comment=A simple applet which updates the whole system with a single click.
 Type=Application
-Icon=com.github.ErenYeager1709.update-applet
+Icon=com.github.ErenYeager1709.update-applet-symbolic
 Exec=update-applet %F
 Terminal=false
 StartupNotify=true
