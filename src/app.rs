@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 use crate::config::Config;
+use crate::fl;
 use cosmic::cosmic_config::{self, CosmicConfigEntry};
 use cosmic::iced::Subscription;
 use cosmic::iced::futures::channel::mpsc::Sender;
@@ -120,7 +121,7 @@ impl cosmic::Application for AppModel {
                             }
                             Err(err) => {
                                 Notification::new()
-                                    .summary("Update-Check")
+                                    .summary(&fl!("dnf-notification-header"))
                                     .body(&err.to_string())
                                     .timeout(Timeout::Milliseconds(5000))
                                     .show_async()
@@ -144,7 +145,7 @@ impl cosmic::Application for AppModel {
                             }
                             Err(err) => {
                                 Notification::new()
-                                    .summary("Flatpak-Update-Check")
+                                    .summary(&fl!("flatpak-notification-header"))
                                     .body(&err.to_string())
                                     .timeout(Timeout::Milliseconds(5000))
                                     .show_async()
@@ -216,27 +217,23 @@ impl AppModel {
         {
             Ok(result) => {
                 let result_text = if result.status.success() {
-                    "dnf update succeded!"
+                    fl!("dnf-notification-success")
                 } else {
                     has_succeded = false;
-                    "dnf update failed!"
+                    fl!("dnf-notification-fail")
                 };
 
-                println!("?");
-
                 Notification::new()
-                    .summary("dnf")
-                    .body(result_text)
+                    .summary(&fl!("dnf-notification-header"))
+                    .body(&result_text)
                     .timeout(Timeout::Milliseconds(5000))
                     .show_async()
                     .await
                     .unwrap();
-
-                println!("??");
             }
             Err(err) => {
                 Notification::new()
-                    .summary("dnf")
+                    .summary(&fl!("dnf-notification-header"))
                     .body(&err.to_string())
                     .timeout(Timeout::Milliseconds(5000))
                     .show_async()
@@ -253,15 +250,15 @@ impl AppModel {
         {
             Ok(result) => {
                 let result_text = if result.status.success() {
-                    "flatpack update succeded!"
+                    fl!("flatpak-notification-success")
                 } else {
                     has_succeded = false;
-                    "flatpack update failed!"
+                    fl!("flatpak-notification-fail")
                 };
 
                 Notification::new()
-                    .summary("Flatpack")
-                    .body(result_text)
+                    .summary(&fl!("flatpak-notification-header"))
+                    .body(&result_text)
                     .timeout(Timeout::Milliseconds(5000))
                     .show_async()
                     .await
@@ -269,7 +266,7 @@ impl AppModel {
             }
             Err(err) => {
                 Notification::new()
-                    .summary("Flatpack")
+                    .summary(&fl!("flatpak-notification-header"))
                     .body(&err.to_string())
                     .timeout(Timeout::Milliseconds(5000))
                     .show_async()

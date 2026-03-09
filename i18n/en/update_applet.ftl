@@ -1,7 +1,7 @@
 app-title = Update Applet
-about = About
-view = View
-welcome = Welcome to COSMIC! ✨
-page-id = Page { $num }
-git-description = Git commit {$hash} on {$date}
-example-row = Example Row
+dnf-notification-header = DNF Update
+dnf-notification-fail = Failed to update DNF packages
+dnf-notification-success = Successfully updated DNF packages
+flatpak-notification-header = Flatpak Update
+flatpak-notification-fail = Failed to update Flatpak packages
+flatpak-notification-success = Successfully updated Flatpak packages
