@@ -113,8 +113,6 @@ impl cosmic::Application for AppModel {
                         let mut is_update_available = false;
                         match Command::new("dnf").arg("check-update").output().await {
                             Ok(result) => {
-                                println!("Update-Check: {:?}", result.status.code());
-
                                 if matches!(result.status.code(), Some(100)) {
                                     is_update_available = true;
                                 }
@@ -138,7 +136,6 @@ impl cosmic::Application for AppModel {
                             Ok(result) => {
                                 let stdout = String::from_utf8_lossy(&result.stdout);
                                 let count = stdout.lines().count();
-                                println!("Flatpak-Update-Check: {}", count);
                                 if count > 0 {
                                     is_update_available = true;
                                 }
@@ -185,11 +182,9 @@ impl cosmic::Application for AppModel {
                 self.config = config;
             }
             Message::UpdateHasUpdates(state) => {
-                println!("HasUpdate: {:?}", state);
                 self.has_updates = state;
             }
             Message::UpdateIsUpdating(state) => {
-                println!("IsUpdating: {:?}", state);
                 self.is_updating = state;
             }
             Message::ButtonPressed => {
