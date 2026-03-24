@@ -29,6 +29,7 @@ pub enum Message {
     UpdateConfig(Config),
     UpdateHasUpdates(bool),
     UpdateIsUpdating(bool),
+    CheckUpdate,
 }
 
 /// Create a COSMIC application from the app model
@@ -110,50 +111,7 @@ impl cosmic::Application for AppModel {
             Subscription::run(|| {
                 cosmic::iced::stream::channel(4, |mut channel| async move {
                     loop {
-                        let mut is_update_available = false;
-                        match Command::new("dnf").arg("check-update").output().await {
-                            Ok(result) => {
-                                if matches!(result.status.code(), Some(100)) {
-                                    is_update_available = true;
-                                }
-                            }
-                            Err(err) => {
-                                Notification::new()
-                                    .summary(&fl!("dnf-notification-header"))
-                                    .body(&err.to_string())
-                                    .timeout(Timeout::Milliseconds(5000))
-                                    .show_async()
-                                    .await
-                                    .unwrap();
-                            }
-                        }
-
-                        match Command::new("flatpak")
-                            .args(["remote-ls", "--updates"])
-                            .output()
-                            .await
-                        {
-                            Ok(result) => {
-                                let stdout = String::from_utf8_lossy(&result.stdout);
-                                let count = stdout.lines().count();
-                                if count > 0 {
-                                    is_update_available = true;
-                                }
-                            }
-                            Err(err) => {
-                                Notification::new()
-                                    .summary(&fl!("flatpak-notification-header"))
-                                    .body(&err.to_string())
-                                    .timeout(Timeout::Milliseconds(5000))
-                                    .show_async()
-                                    .await
-                                    .unwrap();
-                            }
-                        }
-                        if is_update_available {
-                            let _ = channel.send(Message::UpdateHasUpdates(true)).await;
-                        }
-
+                        let _ = channel.send(Message::CheckUpdate).await;
                         sleep(Duration::from_mins(15)).await;
                     }
                 })
@@ -187,6 +145,9 @@ impl cosmic::Application for AppModel {
             Message::UpdateIsUpdating(state) => {
                 self.is_updating = state;
             }
+            Message::CheckUpdate => {
+                return Task::run(cosmic::iced::stream::channel(4, Self::check_update), |x| x);
+            }
             Message::ButtonPressed => {
                 self.is_updating = true;
                 return Task::run(cosmic::iced::stream::channel(4, Self::update_system), |x| x);
@@ -217,6 +178,16 @@ impl AppModel {
                     has_succeded = false;
                     fl!("dnf-notification-fail")
                 };
+
+                if matches!(result.status.code(), Some(126)) {
+                    let _ = channel
+                        .send(Action::App(Message::UpdateIsUpdating(false)))
+                        .await;
+
+                    let _ = channel.send(Action::App(Message::CheckUpdate)).await;
+
+                    return;
+                }
 
                 Notification::new()
                     .summary(&fl!("dnf-notification-header"))
@@ -274,15 +245,66 @@ impl AppModel {
             let _ = channel
                 .send(Action::App(Message::UpdateIsUpdating(false)))
                 .await;
-            let _ = channel
-                .send(Action::App(Message::UpdateHasUpdates(false)))
-                .await;
+            let _ = channel.send(Action::App(Message::CheckUpdate)).await;
         } else {
             let _ = channel
                 .send(Action::App(Message::UpdateIsUpdating(false)))
                 .await;
             let _ = channel
                 .send(Action::App(Message::UpdateHasUpdates(true)))
+                .await;
+        }
+    }
+
+    async fn check_update(mut channel: Sender<Action<Message>>) {
+        let mut is_update_available = false;
+        match Command::new("dnf").arg("check-update").output().await {
+            Ok(result) => {
+                if matches!(result.status.code(), Some(100)) {
+                    is_update_available = true;
+                }
+            }
+            Err(err) => {
+                Notification::new()
+                    .summary(&fl!("dnf-notification-header"))
+                    .body(&err.to_string())
+                    .timeout(Timeout::Milliseconds(5000))
+                    .show_async()
+                    .await
+                    .unwrap();
+            }
+        }
+
+        match Command::new("flatpak")
+            .args(["remote-ls", "--updates"])
+            .output()
+            .await
+        {
+            Ok(result) => {
+                let stdout = String::from_utf8_lossy(&result.stdout);
+                let count = stdout.lines().count();
+                if count > 0 {
+                    is_update_available = true;
+                }
+            }
+            Err(err) => {
+                Notification::new()
+                    .summary(&fl!("flatpak-notification-header"))
+                    .body(&err.to_string())
+                    .timeout(Timeout::Milliseconds(5000))
+                    .show_async()
+                    .await
+                    .unwrap();
+            }
+        }
+
+        if is_update_available {
+            let _ = channel
+                .send(Action::App(Message::UpdateHasUpdates(true)))
+                .await;
+        } else {
+            let _ = channel
+                .send(Action::App(Message::UpdateHasUpdates(false)))
                 .await;
         }
     }
