@@ -242,10 +242,10 @@ impl AppModel {
         }
 
         if has_succeded {
+            Self::check_update(channel.clone()).await;
             let _ = channel
                 .send(Action::App(Message::UpdateIsUpdating(false)))
                 .await;
-            let _ = channel.send(Action::App(Message::CheckUpdate)).await;
         } else {
             let _ = channel
                 .send(Action::App(Message::UpdateIsUpdating(false)))
